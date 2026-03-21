@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestão de Ordens de Serviço v3.0 (Cloud)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    /* ===========================
+       VARIÁVEIS DE CORES E TEMA
+    =========================== */
+    :root {
+      --bg-color: #f4f7fb;
+      --section-bg-color: #ffffff;
+      --text-color: #2d3436;
+      --title-color: #0984e3;
+      --label-color: #636e72;
+      --border-color: #dfe6e9;
+      --shadow-color: rgba(0, 0, 0, 0.06);
+      --success-color: #00b894;
+      --warning-color: #fdcb6e;
+      --error-color: #d63031;
+      --gradient: linear-gradient(135deg, #6a89cc, #4a69bd);
+    }
+
+    body.dark-mode {
+      --bg-color: #1e272e;
+      --section-bg-color: #2f3640;
+      --text-color: #dcdde1;
+      --title-color: #74b9ff;
+      --label-color: #b2bec3;
+      --border-color: #353b48;
+      --shadow-color: rgba(0, 0, 0, 0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.4s, color 0.4s;
+      line-height: 1.6;
+    }
+
+    .container { max-width: 950px; margin: 30px auto; padding: 20px; position: relative; }
+    h1, h2 { text-align: center; margin-bottom: 20px; color: var(--title-color); font-weight: 700; }
+
+    /* Estilos do Login */
+    #login-screen {
+      max-width: 400px; margin: 100px auto; padding: 30px;
+      background: var(--section-bg-color); border-radius: 15px;
+      box-shadow: 0 8px 25px var(--shadow-color); text-align: center;
+    }
+    #login-screen h2 { margin-bottom: 20px; }
+    #login-screen input { margin-bottom: 15px; }
+
+    /* Botões de controle de topo */
+    .top-controls {
+      position: absolute; top: 25px; right: 25px; display: flex; gap: 10px;
+    }
+    .top-btn {
+      padding: 8px 14px; border: none; border-radius: 20px;
+      background: var(--gradient); color: #fff; cursor: pointer; font-weight: 600;
+      box-shadow: 0 4px 12px var(--shadow-color); transition: transform 0.2s ease;
+    }
+    .top-btn:hover { transform: translateY(-2px); }
+    #logout-btn { background: var(--error-color); }
+
+    form, .filtros {
+      background: var(--section-bg-color); padding: 25px; border-radius: 15px;
+      box-shadow: 0 8px 25px var(--shadow-color); margin-bottom: 30px;
+    }
+
+    label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 600; color: var(--label-color); }
+
+    input, textarea, select {
+      width: 100%; padding: 12px 15px; border: 1px solid var(--border-color);
+      background-color: var(--bg-color); color: var(--text-color); border-radius: 12px; font-family: inherit; 
+    }
+
+    .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; }
+    button { flex: 1 1 180px; padding: 14px; border: none; border-radius: 10px; background: var(--gradient); color: #fff; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+    button:hover { transform: translateY(-3px); opacity: 0.9; }
+
+    .os-item {
+      background: var(--section-bg-color); padding: 20px; border-radius: 12px; margin-bottom: 15px;
+      box-shadow: 0 3px 10px var(--shadow-color); border-left: 8px solid #ccc;
+    }
+    .os-item.pendente { border-left-color: var(--warning-color); }
+    .os-item.concluido { border-left-color: var(--success-color); }
+
+    .status-badge {
+      display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.85em; font-weight: bold; margin-bottom: 10px;
+    }
+    .badge-pendente { background: #ffeaa7; color: #d35400; }
+    .badge-concluido { background: #55efc4; color: #006266; }
+
+    #notification {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 14px 25px;
+      border-radius: 10px; font-weight: 600; z-index: 1000; opacity: 0; visibility: hidden; transition: 0.4s;
+    }
+    #notification.show { opacity: 1; visibility: visible; }
+    #notification.success { background: var(--success-color); color: #fff; }
+    #notification.error { background: var(--error-color); color: #fff; }
+
+    .os-actions { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .edit-btn { background: #0984e3; flex: none; }
+    .status-btn { background: #636e72; flex: none; }
+    .delete-btn { background: #d63031; flex: none; }
+  </style>
+</head>
+<body>
+
+  <div id="notification"></div> 
+
+  <div id="login-screen">
+    <h2>Acesso ao Sistema</h2>
+    <form id="loginForm" style="box-shadow: none; padding: 0; margin: 0;">
+      <input type="email" id="email" placeholder="Seu e-mail" required />
+      <input type="password" id="senha" placeholder="Sua senha" required />
+      <button type="submit" id="btn-login" style="width: 100%;">Entrar</button>
+    </form>
+  </div>
+
+  <div class="container" id="app-screen" style="display: none;">
+    <div class="top-controls">
+      <button id="theme-toggle-btn" class="top-btn">Tema</button>
+      <button id="logout-btn" class="top-btn">Sair</button>
+    </div>
+    
+    <h1>Gestão de Ordens de Serviço</h1>
+
+    <form id="osForm">
+      <input type="hidden" id="editId" />
+      
+      <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+          <label for="data">Data:</label>
+          <input type="date" id="data" required />
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+          <label for="os">Nº OS:</label>
+          <input type="text" id="os" placeholder="Ex: 123" required />
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+          <label for="status">Status Inicial:</label>
+          <select id="status">
+            <option value="pendente">Pendente</option>
+            <option value="concluido">Concluído</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="condominio">Condomínio:</label>
+      <input type="text" id="condominio" placeholder="Nome do condomínio" required />
+      
+      <label for="descricao">Descrição dos serviços:</label>
+      <textarea id="descricao" rows="3" required></textarea>
+      
+      <label for="relatorio">Relatório de atividades:</label>
+      <textarea id="relatorio" rows="4"></textarea>
+      
+      <div class="buttons">
+        <button type="submit" id="save-btn">Salvar OS na Nuvem</button>
+        <button type="button" id="pdf-btn" style="background: #27ae60;">Gerar PDF</button>
+        <button type="button" id="excel-btn" style="background: #2980b9;">Exportar Excel</button>
+      </div>
+    </form>
+
+    <div class="filtros">
+      <h2>Filtros de Busca</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div>
+          <label for="filtroCondominio">Condomínio:</label>
+          <input type="text" id="filtroCondominio" placeholder="Digite o nome..." />
+        </div>
+        <div>
+          <label for="filtroStatus">Status:</label>
+          <select id="filtroStatus">
+            <option value="todos">Todos</option>
+            <option value="pendente">Pendentes</option>
+            <option value="concluido">Concluídos</option>
+          </select>
+        </div>
+      </div>
+      <label>Período:</label>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="date" id="filtroDataInicio" /> até <input type="date" id="filtroDataFim" />
+      </div>
+      <button type="button" id="apply-filter-btn" style="margin-top:15px;">Filtrar Agora</button>
+    </div>
+
+    <div id="listaOS">
+      <h2>Minhas Ordens</h2>
+      <div id="osContainer">Carregando ordens...</div>
+    </div>
+  </div>
+
+<script>
+/* =================================================================
+   ATENÇÃO: COLE SUAS CHAVES DO SUPABASE AQUI EMBAIXO!
+   ================================================================= */
+const SUPABASE_URL = 'https://bvlhbhqvpzevresqdvex.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_VZH7b3-ym7AnY5WL7X0vSg_0uVnS_aS';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+let ordensGlobais = []; // Guarda as ordens localmente na memória após puxar do banco
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  const loginScreen = document.getElementById('login-screen');
+  const appScreen = document.getElementById('app-screen');
+  const loginForm = document.getElementById('loginForm');
+  const osForm = document.getElementById('osForm');
+  const saveBtn = document.getElementById('save-btn');
+  const osContainer = document.getElementById('osContainer');
+  const editIdInput = document.getElementById('editId');
+
+  const showNotification = (message, type = 'success') => {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = `${type} show`;
+    setTimeout(() => notification.classList.remove('show'), 3000);
+  };
+
+  // --- AUTENTICAÇÃO ---
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      currentUser = session.user;
+      loginScreen.style.display = 'none';
+      appScreen.style.display = 'block';
+      carregarOrdensDoBanco(); // Puxa os dados assim que logar
+    } else {
+      currentUser = null;
+      loginScreen.style.display = 'block';
+      appScreen.style.display = 'none';
+    }
+  });
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('senha').value;
+    const btn = document.getElementById('btn-login');
+    btn.textContent = 'Entrando...';
+    
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      showNotification(error.message, 'error');
+      btn.textContent = 'Entrar';
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+  });
+
+  // --- BANCO DE DADOS (CRUD) ---
+  const carregarOrdensDoBanco = async () => {
+    const { data, error } = await supabase
+      .from('ordens')
+      .select('*')
+      .order('data', { ascending: false });
+
+    if (error) {
+      showNotification('Erro ao carregar ordens.', 'error');
+      console.error(error);
+    } else {
+      ordensGlobais = data || [];
+      renderOrdens();
+    }
+  };
+
+  const salvarOS = async (event) => {
+    event.preventDefault();
+    const editId = editIdInput.value;
+    const osData = {
+      data: document.getElementById("data").value,
+      os: document.getElementById("os").value,
+      condominio: document.getElementById("condominio").value,
+      descricao: document.getElementById("descricao").value,
+      relatorio: document.getElementById("relatorio").value,
+      status: document.getElementById("status").value || 'pendente',
+      user_id: currentUser.id // Vincula a OS ao usuário logado
+    };
+
+    saveBtn.textContent = 'Salvando...';
+
+    if (editId !== "") {
+      // Atualizar existente
+      const { error } = await supabase.from('ordens').update(osData).eq('id', editId);
+      if (error) showNotification("Erro ao atualizar", "error");
+      else showNotification("OS atualizada na nuvem!");
+    } else {
+      // Inserir nova
+      const { error } = await supabase.from('ordens').insert([osData]);
+      if (error) showNotification("Erro ao salvar", "error");
+      else showNotification("OS salva na nuvem!");
+    }
+
+    resetFormState();
+    await carregarOrdensDoBanco();
+  };
+
+  const resetFormState = () => {
+    osForm.reset();
+    editIdInput.value = "";
+    saveBtn.textContent = "Salvar OS na Nuvem";
+    document.getElementById("status").value = "pendente";
+  };
+
+  window.excluirOS = async (id) => {
+    if (confirm("Deseja realmente excluir esta OS da nuvem?")) {
+      const { error } = await supabase.from('ordens').delete().eq('id', id);
+      if (error) showNotification("Erro ao excluir", "error");
+      else {
+        showNotification("OS excluída.");
+        carregarOrdensDoBanco();
+      }
+    }
+  };
+
+  window.alternarStatus = async (id, statusAtual) => {
+    const novoStatus = statusAtual === 'concluido' ? 'pendente' : 'concluido';
+    const { error } = await supabase.from('ordens').update({ status: novoStatus }).eq('id', id);
+    if (error) showNotification("Erro ao mudar status", "error");
+    else {
+      showNotification("Status atualizado!");
+      carregarOrdensDoBanco();
+    }
+  };
+
+  window.editarOS = (id) => {
+    const os = ordensGlobais.find(o => o.id === id);
+    if(os) {
+      document.getElementById("data").value = os.data;
+      document.getElementById("os").value = os.os;
+      document.getElementById("condominio").value = os.condominio;
+      document.getElementById("descricao").value = os.descricao;
+      document.getElementById("relatorio").value = os.relatorio;
+      document.getElementById("status").value = os.status || 'pendente';
+      editIdInput.value = os.id;
+      saveBtn.textContent = "Atualizar OS na Nuvem";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // --- RENDERIZAÇÃO E FILTROS ---
+  const filtrarOrdens = () => {
+    const filtroCondominio = document.getElementById("filtroCondominio").value.toLowerCase();
+    const filtroStatus = document.getElementById("filtroStatus").value;
+    const inicio = document.getElementById("filtroDataInicio").value;
+    const fim = document.getElementById("filtroDataFim").value;
+
+    return ordensGlobais.filter(os => {
+      const matchCondominio = !filtroCondominio || os.condominio.toLowerCase().includes(filtroCondominio);
+      const matchStatus = filtroStatus === 'todos' || os.status === filtroStatus;
+      const matchInicio = !inicio || os.data >= inicio;
+      const matchFim = !fim || os.data <= fim;
+      return matchCondominio && matchStatus && matchInicio && matchFim;
+    });
+  };
+
+  const formatarDataParaExibicao = (dataYMD) => {
+    if (!dataYMD) return "";
+    const [year, month, day] = dataYMD.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const renderOrdens = () => {
+    osContainer.innerHTML = "";
+    const ordensFiltradas = filtrarOrdens();
+
+    if(ordensFiltradas.length === 0) {
+      osContainer.innerHTML = "<p>Nenhuma ordem encontrada.</p>";
+      return;
+    }
+
+    ordensFiltradas.forEach((os) => {
+      const statusClass = os.status === 'concluido' ? 'concluido' : 'pendente';
+      const badgeClass = os.status === 'concluido' ? 'badge-concluido' : 'badge-pendente';
+      const statusTexto = os.status === 'concluido' ? 'Concluído' : 'Pendente';
+
+      const osItemDiv = document.createElement('div');
+      osItemDiv.className = `os-item ${statusClass}`;
+      osItemDiv.innerHTML = `
+        <span class="status-badge ${badgeClass}">${statusTexto}</span><br>
+        <strong>OS ${os.os}</strong> - ${os.condominio} <br>
+        Data: ${formatarDataParaExibicao(os.data)} <br>
+        <em>${os.descricao}</em>
+        <div class="os-actions">
+          <button class="status-btn" onclick="alternarStatus(${os.id}, '${os.status}')">Mudar Status</button>
+          <button class="edit-btn" onclick="editarOS(${os.id})">Editar</button>
+          <button class="delete-btn" onclick="excluirOS(${os.id})">Excluir</button>
+        </div>
+      `;
+      osContainer.appendChild(osItemDiv);
+    });
+  };
+
+  // --- LISTENERS ---
+  osForm.addEventListener('submit', salvarOS);
+  document.getElementById('apply-filter-btn').addEventListener('click', renderOrdens);
+
+  // Tema Escuro
+  document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+  });
+  if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+  // Exportar PDF
+  document.getElementById('pdf-btn').addEventListener('click', () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let ordens = filtrarOrdens();
+    if (ordens.length === 0) return showNotification("Lista vazia!", "error");
+    doc.text("Relatório de Ordens de Serviço", 10, 10);
+    let y = 20;
+    ordens.forEach(os => {
+      doc.setFontSize(9);
+      doc.text(`[${os.status.toUpperCase()}] OS: ${os.os} - ${os.condominio}`, 10, y);
+      y += 8;
+    });
+    doc.save("Relatorio_OS.pdf");
+  });
+
+  // Exportar Excel
+  document.getElementById('excel-btn').addEventListener('click', () => {
+    let ordens = filtrarOrdens();
+    if (ordens.length === 0) return showNotification("Lista vazia!", "error");
+    // Remove os campos técnicos antes de exportar
+    let ordensLimpas = ordens.map(({id, user_id, ...resto}) => resto);
+    let ws = XLSX.utils.json_to_sheet(ordensLimpas);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "OS");
+    XLSX.writeFile(wb, "ordens_servico_nuvem.xlsx");
+  });
+
+});
+</script>
+</body>
+</html>
