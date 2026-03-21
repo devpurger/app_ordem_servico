@@ -200,15 +200,12 @@
   </div>
 
 <script>
-/* =================================================================
-   ATENÇÃO: COLE SUAS CHAVES DO SUPABASE AQUI EMBAIXO!
-   ================================================================= */
 const SUPABASE_URL = 'https://bvlhbhqvpzevresqdvex.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2bGhiaHF2cHpldnJlc3FkdmV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTQ1OTYsImV4cCI6MjA4OTY5MDU5Nn0.roC3agT8fDHwqzzPuE4VnW5PWCwzUaviCLnrJyUHfPQ';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
-let ordensGlobais = []; // Guarda as ordens localmente na memória após puxar do banco
+let ordensGlobais = [];
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -227,13 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => notification.classList.remove('show'), 3000);
   };
 
-  // --- AUTENTICAÇÃO ---
   supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
       currentUser = session.user;
       loginScreen.style.display = 'none';
       appScreen.style.display = 'block';
-      carregarOrdensDoBanco(); // Puxa os dados assim que logar
+      carregarOrdensDoBanco();
     } else {
       currentUser = null;
       loginScreen.style.display = 'block';
@@ -259,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
     await supabase.auth.signOut();
   });
 
-  // --- BANCO DE DADOS (CRUD) ---
   const carregarOrdensDoBanco = async () => {
     const { data, error } = await supabase
       .from('ordens')
@@ -285,18 +280,16 @@ document.addEventListener('DOMContentLoaded', () => {
       descricao: document.getElementById("descricao").value,
       relatorio: document.getElementById("relatorio").value,
       status: document.getElementById("status").value || 'pendente',
-      user_id: currentUser.id // Vincula a OS ao usuário logado
+      user_id: currentUser.id
     };
 
     saveBtn.textContent = 'Salvando...';
 
     if (editId !== "") {
-      // Atualizar existente
       const { error } = await supabase.from('ordens').update(osData).eq('id', editId);
       if (error) showNotification("Erro ao atualizar", "error");
       else showNotification("OS atualizada na nuvem!");
     } else {
-      // Inserir nova
       const { error } = await supabase.from('ordens').insert([osData]);
       if (error) showNotification("Erro ao salvar", "error");
       else showNotification("OS salva na nuvem!");
@@ -349,7 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // --- RENDERIZAÇÃO E FILTROS ---
   const filtrarOrdens = () => {
     const filtroCondominio = document.getElementById("filtroCondominio").value.toLowerCase();
     const filtroStatus = document.getElementById("filtroStatus").value;
@@ -402,18 +394,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // --- LISTENERS ---
   osForm.addEventListener('submit', salvarOS);
   document.getElementById('apply-filter-btn').addEventListener('click', renderOrdens);
 
-  // Tema Escuro
   document.getElementById('theme-toggle-btn').addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
   });
   if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 
-  // Exportar PDF
   document.getElementById('pdf-btn').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -429,11 +418,9 @@ document.addEventListener('DOMContentLoaded', () => {
     doc.save("Relatorio_OS.pdf");
   });
 
-  // Exportar Excel
   document.getElementById('excel-btn').addEventListener('click', () => {
     let ordens = filtrarOrdens();
     if (ordens.length === 0) return showNotification("Lista vazia!", "error");
-    // Remove os campos técnicos antes de exportar
     let ordensLimpas = ordens.map(({id, user_id, ...resto}) => resto);
     let ws = XLSX.utils.json_to_sheet(ordensLimpas);
     let wb = XLSX.utils.book_new();
