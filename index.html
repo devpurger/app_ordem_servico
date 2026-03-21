@@ -48,19 +48,26 @@
     .container { max-width: 950px; margin: 30px auto; padding: 20px; position: relative; }
     h1, h2 { text-align: center; margin-bottom: 20px; color: var(--title-color); font-weight: 700; }
 
-    /* Estilos do Login */
+    /* Estilos do Login Google */
     #login-screen {
-      max-width: 400px; margin: 100px auto; padding: 30px;
+      max-width: 400px; margin: 100px auto; padding: 40px 30px;
       background: var(--section-bg-color); border-radius: 15px;
       box-shadow: 0 8px 25px var(--shadow-color); text-align: center;
     }
-    #login-screen h2 { margin-bottom: 20px; }
-    #login-screen input { margin-bottom: 15px; }
+    #login-screen h2 { margin-bottom: 10px; }
+    #login-screen p { color: var(--label-color); margin-bottom: 25px; font-size: 0.9em; }
 
-    /* Botões de controle de topo */
-    .top-controls {
-      position: absolute; top: 25px; right: 25px; display: flex; gap: 10px;
+    .btn-google {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: #ffffff; color: #444; font-weight: 600; font-size: 16px;
+      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
+    .btn-google:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    body.dark-mode .btn-google { background: #333; border-color: #444; color: #fff; }
+
+    .top-controls { position: absolute; top: 25px; right: 25px; display: flex; gap: 10px; }
     .top-btn {
       padding: 8px 14px; border: none; border-radius: 20px;
       background: var(--gradient); color: #fff; cursor: pointer; font-weight: 600;
@@ -69,47 +76,30 @@
     .top-btn:hover { transform: translateY(-2px); }
     #logout-btn { background: var(--error-color); }
 
-    form, .filtros {
-      background: var(--section-bg-color); padding: 25px; border-radius: 15px;
-      box-shadow: 0 8px 25px var(--shadow-color); margin-bottom: 30px;
-    }
-
+    form, .filtros { background: var(--section-bg-color); padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px var(--shadow-color); margin-bottom: 30px; }
     label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 600; color: var(--label-color); }
-
-    input, textarea, select {
-      width: 100%; padding: 12px 15px; border: 1px solid var(--border-color);
-      background-color: var(--bg-color); color: var(--text-color); border-radius: 12px; font-family: inherit; 
-    }
-
+    input, textarea, select { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-color); border-radius: 12px; font-family: inherit; }
     .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; }
-    button { flex: 1 1 180px; padding: 14px; border: none; border-radius: 10px; background: var(--gradient); color: #fff; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
-    button:hover { transform: translateY(-3px); opacity: 0.9; }
+    button.action-btn { flex: 1 1 180px; padding: 14px; border: none; border-radius: 10px; background: var(--gradient); color: #fff; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+    button.action-btn:hover { transform: translateY(-3px); opacity: 0.9; }
 
-    .os-item {
-      background: var(--section-bg-color); padding: 20px; border-radius: 12px; margin-bottom: 15px;
-      box-shadow: 0 3px 10px var(--shadow-color); border-left: 8px solid #ccc;
-    }
+    .os-item { background: var(--section-bg-color); padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 3px 10px var(--shadow-color); border-left: 8px solid #ccc; }
     .os-item.pendente { border-left-color: var(--warning-color); }
     .os-item.concluido { border-left-color: var(--success-color); }
-
-    .status-badge {
-      display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.85em; font-weight: bold; margin-bottom: 10px;
-    }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.85em; font-weight: bold; margin-bottom: 10px; }
     .badge-pendente { background: #ffeaa7; color: #d35400; }
     .badge-concluido { background: #55efc4; color: #006266; }
-
-    #notification {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 14px 25px;
-      border-radius: 10px; font-weight: 600; z-index: 1000; opacity: 0; visibility: hidden; transition: 0.4s;
-    }
+    
+    #notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 14px 25px; border-radius: 10px; font-weight: 600; z-index: 1000; opacity: 0; visibility: hidden; transition: 0.4s; }
     #notification.show { opacity: 1; visibility: visible; }
     #notification.success { background: var(--success-color); color: #fff; }
     #notification.error { background: var(--error-color); color: #fff; }
 
     .os-actions { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .edit-btn { background: #0984e3; flex: none; }
-    .status-btn { background: #636e72; flex: none; }
-    .delete-btn { background: #d63031; flex: none; }
+    .os-actions button { padding: 8px 15px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: bold; }
+    .edit-btn { background: #0984e3; }
+    .status-btn { background: #636e72; }
+    .delete-btn { background: #d63031; }
   </style>
 </head>
 <body>
@@ -118,11 +108,16 @@
 
   <div id="login-screen">
     <h2>Acesso ao Sistema</h2>
-    <form id="loginForm" style="box-shadow: none; padding: 0; margin: 0;">
-      <input type="email" id="email" placeholder="Seu e-mail" required />
-      <input type="password" id="senha" placeholder="Sua senha" required />
-      <button type="submit" id="btn-login" style="width: 100%;">Entrar</button>
-    </form>
+    <p>Área restrita para técnicos instaladores.</p>
+    <button id="btn-login-google" class="btn-google">
+      <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Entrar com o Google
+    </button>
   </div>
 
   <div class="container" id="app-screen" style="display: none;">
@@ -164,9 +159,9 @@
       <textarea id="relatorio" rows="4"></textarea>
       
       <div class="buttons">
-        <button type="submit" id="save-btn">Salvar OS na Nuvem</button>
-        <button type="button" id="pdf-btn" style="background: #27ae60;">Gerar PDF</button>
-        <button type="button" id="excel-btn" style="background: #2980b9;">Exportar Excel</button>
+        <button type="submit" id="save-btn" class="action-btn">Salvar OS na Nuvem</button>
+        <button type="button" id="pdf-btn" class="action-btn" style="background: #27ae60;">Gerar PDF</button>
+        <button type="button" id="excel-btn" class="action-btn" style="background: #2980b9;">Exportar Excel</button>
       </div>
     </form>
 
@@ -190,7 +185,7 @@
       <div style="display:flex; gap:10px; align-items:center;">
         <input type="date" id="filtroDataInicio" /> até <input type="date" id="filtroDataFim" />
       </div>
-      <button type="button" id="apply-filter-btn" style="margin-top:15px;">Filtrar Agora</button>
+      <button type="button" id="apply-filter-btn" class="action-btn" style="margin-top:15px;">Filtrar Agora</button>
     </div>
 
     <div id="listaOS">
@@ -211,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const loginScreen = document.getElementById('login-screen');
   const appScreen = document.getElementById('app-screen');
-  const loginForm = document.getElementById('loginForm');
   const osForm = document.getElementById('osForm');
   const saveBtn = document.getElementById('save-btn');
   const osContainer = document.getElementById('osContainer');
@@ -224,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => notification.classList.remove('show'), 3000);
   };
 
+  // --- OUVINTE DE ESTADO DE LOGIN ---
   supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
       currentUser = session.user;
@@ -237,18 +232,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('senha').value;
-    const btn = document.getElementById('btn-login');
-    btn.textContent = 'Entrando...';
-    
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      showNotification(error.message, 'error');
-      btn.textContent = 'Entrar';
-    }
+  // --- BOTÃO ENTRAR COM GOOGLE ---
+  document.getElementById('btn-login-google').addEventListener('click', async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    if (error) showNotification("Erro ao logar com Google", 'error');
   });
 
   document.getElementById('logout-btn').addEventListener('click', async () => {
