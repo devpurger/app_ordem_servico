@@ -159,7 +159,7 @@
       <textarea id="relatorio" rows="4"></textarea>
       
       <div class="buttons">
-        <button type="submit" id="save-btn" class="action-btn">Salvar OS na Nuvem</button>
+        <button type="submit" id="save-btn" class="action-btn">Salvar OS</button>
         <button type="button" id="pdf-btn" class="action-btn" style="background: #27ae60;">Gerar PDF</button>
         <button type="button" id="excel-btn" class="action-btn" style="background: #2980b9;">Exportar Excel</button>
       </div>
@@ -278,11 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editId !== "") {
       const { error } = await supabaseClient.from('ordens').update(osData).eq('id', editId);
       if (error) showNotification("Erro ao atualizar", "error");
-      else showNotification("OS atualizada na nuvem!");
+      else showNotification("OS atualizada");
     } else {
       const { error } = await supabaseClient.from('ordens').insert([osData]);
       if (error) showNotification("Erro ao salvar", "error");
-      else showNotification("OS salva na nuvem!");
+      else showNotification("OS salva");
     }
 
     resetFormState();
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById("relatorio").value = os.relatorio;
       document.getElementById("status").value = os.status || 'pendente';
       editIdInput.value = os.id;
-      saveBtn.textContent = "Atualizar OS na Nuvem";
+      saveBtn.textContent = "Atualizar OS";
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
