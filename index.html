@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let ws = XLSX.utils.json_to_sheet(ordensLimpas);
     let wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "OS");
-    XLSX.writeFile(wb, "ordens_servico_nuvem.xlsx");
+    XLSX.writeFile(wb, "ordens_servico.xlsx");
   });
 
 });
